@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>捨てメアド</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:#0f172a;
+  color:#e5e7eb;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+header{
+  background:#111827;
+  border-bottom:1px solid #334155;
+  padding:18px;
+}
+
+header h1{
+  margin:0;
+  font-size:23px;
+}
+
+header p{
+  margin:5px 0 0;
+  color:#94a3b8;
+  font-size:13px;
+}
+
+.container{
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  padding:18px;
+}
+
+.card{
+  background:#1e293b;
+  border:1px solid #334155;
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:18px;
+}
+
+.card h2{
+  margin-top:0;
+}
+
+.label{
+  color:#94a3b8;
+  font-size:13px;
+  margin-bottom:7px;
+}
+
+.email-row{
+  display:flex;
+  gap:8px;
+}
+
+input{
+  flex:1;
+  min-width:0;
+  border:1px solid #475569;
+  border-radius:10px;
+  padding:13px;
+  background:#0f172a;
+  color:white;
+  font-size:15px;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:12px 16px;
+  background:#2563eb;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:14px;
+}
+
+button:disabled{
+  opacity:.5;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+.buttons{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.gray{
+  background:#475569;
+}
+
+.red{
+  background:#dc2626;
+}
+
+.status{
+  margin-top:12px;
+  background:#0f172a;
+  padding:11px;
+  border-radius:10px;
+  color:#94a3b8;
+  font-size:13px;
+  word-break:break-word;
+}
+
+.mail{
+  background:#0f172a;
+  border:1px solid #334155;
+  border-radius:12px;
+  padding:15px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.mail:hover{
+  background:#172033;
+}
+
+.mail.unread{
+  border-color:#2563eb;
+}
+
+.mail-title{
+  font-weight:bold;
+  word-break:break-word;
+}
+
+.mail-from{
+  color:#60a5fa;
+  font-size:13px;
+  margin-top:6px;
+  word-break:break-all;
+}
+
+.mail-intro{
+  color:#94a3b8;
+  font-size:13px;
+  margin-top:6px;
+  word-break:break-word;
+}
+
+.mail-date{
+  color:#64748b;
+  font-size:11px;
+  margin-top:8px;
+}
+
+.empty{
+  text-align:center;
+  color:#64748b;
+  padding:35px 10px;
+}
+
+.message-card{
+  display:none;
+}
+
+.message-card.show{
+  display:block;
+}
+
+.message-info{
+  color:#94a3b8;
+  font-size:13px;
+  margin-bottom:15px;
+  word-break:break-word;
+}
+
+.message-body{
+  background:#0f172a;
+  border-radius:10px;
+  padding:16px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  line-height:1.7;
+  min-height:100px;
+}
+
+.notice{
+  color:#94a3b8;
+  font-size:12px;
+  line-height:1.7;
+}
+
+@media(max-width:600px){
+
+  .container{
+    padding:12px;
+  }
+
+  .card{
+    padding:15px;
+  }
+
+  .email-row{
+    flex-direction:column;
+  }
+
+  .email-row button{
+    width:100%;
+  }
+
+  .buttons button{
+    flex:1;
+    min-width:130px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📧 捨てメアド</h1>
+  <p>Temporary Email</p>
+</header>
+
+<div class="container">
+
+  <!-- メールアドレス -->
+
+  <div class="card">
+
+    <div class="label">
+      現在のメールアドレス
+    </div>
+
+    <div class="email-row">
+
+      <input
+        id="email"
+        type="text"
+        readonly
+        placeholder="まだ作成されていません"
+      >
+
+      <button onclick="copyEmail()">
+        コピー
+      </button>
+
+    </div>
+
+    <div class="buttons">
+
+      <button onclick="createMailbox()">
+        📧 新しいメアドを作る
+      </button>
+
+      <button
+        class="gray"
+        onclick="refreshInbox()"
+      >
+        🔄 受信箱を更新
+      </button>
+
+      <button
+        class="red"
+        onclick="deleteMailbox()"
+      >
+        🗑️ メアドを削除
+      </button>
+
+    </div>
+
+    <div id="status" class="status">
+      「新しいメアドを作る」を押してください。
+    </div>
+
+  </div>
+
+
+  <!-- 受信箱 -->
+
+  <div class="card">
+
+    <h2>📥 受信箱</h2>
+
+    <div id="inbox">
+
+      <div class="empty">
+        まだメールはありません
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- メール本文 -->
+
+  <div
+    id="messageCard"
+    class="card message-card"
+  >
+
+    <h2 id="messageSubject">
+      メール
+    </h2>
+
+    <div
+      id="messageInfo"
+      class="message-info"
+    ></div>
+
+    <div
+      id="messageBody"
+      class="message-body"
+    ></div>
+
+    <div class="buttons">
+
+      <button
+        class="gray"
+        onclick="closeMessage()"
+      >
+        閉じる
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- 注意 -->
+
+  <div class="card">
+
+    <div class="notice">
+
+      ⚠️ 一時メールサービスを利用しています。<br>
+      大切なアカウントやパスワードの復旧用メールアドレスには、
+      通常のメールアドレスを使用してください。
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const API = "https://api.mail.tm";
+
+let mailbox = null;
+let token = null;
+let accountId = null;
+
+
+/* =========================
+   ランダム文字列
+========================= */
+
+function randomString(length){
+
+  const chars =
+    "abcdefghijklmnopqrstuvwxyz0123456789";
+
+  let result = "";
+
+  for(let i = 0; i < length; i++){
+
+    result += chars[
+      Math.floor(
+        Math.random() * chars.length
+      )
+    ];
+
+  }
+
+  return result;
+}
+
+
+/* =========================
+   ステータス表示
+========================= */
+
+function setStatus(text){
+
+  document.getElementById(
+    "status"
+  ).textContent = text;
+
+}
+
+
+/* =========================
+   API
+========================= */
+
+async function api(path, options = {}){
+
+  const response =
+    await fetch(API + path, options);
+
+  let data = null;
+
+  try{
+
+    data = await response.json();
+
+  }catch(error){
+
+    data = null;
+
+  }
+
+  if(!response.ok){
+
+    let message =
+      "APIエラー";
+
+    if(data && data.message){
+
+      message =
+        data.message;
+
+    }
+
+    throw new Error(
+      message +
+      " (" +
+      response.status +
+      ")"
+    );
+
+  }
+
+  return data;
+
+}
+
+
+/* =========================
+   利用可能なドメイン
+========================= */
+
+async function getDomain(){
+
+  const data =
+    await api("/domains?page=1");
+
+  const domains =
+    data["hydra:member"] || [];
+
+  if(domains.length === 0){
+
+    throw new Error(
+      "利用可能なメールドメインがありません。"
+    );
+
+  }
+
+  return domains[0].domain;
+
+}
+
+
+/* =========================
+   新しいメアド作成
+========================= */
+
+async function createMailbox(){
+
+  try{
+
+    setStatus(
+      "メールドメインを確認しています..."
+    );
+
+
+    const domain =
+      await getDomain();
+
+
+    const username =
+      "user" +
+      Date.now().toString(36) +
+      randomString(6);
+
+
+    const password =
+      randomString(18) +
+      "A1!";
+
+
+    const address =
+      username +
+      "@" +
+      domain;
+
+
+    setStatus(
+      "メールアカウントを作成しています..."
+    );
+
+
+    await api(
+      "/accounts",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":
+            "application/json"
+        },
+
+        body:JSON.stringify({
+          address:address,
+          password:password
+        })
+      }
+    );
+
+
+    setStatus(
+      "メールアカウントを認証しています..."
+    );
+
+
+    const auth =
+      await api(
+        "/token",
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            address:address,
+            password:password
+          })
+        }
+      );
+
+
+    mailbox =
+      address;
+
+    token =
+      auth.token;
+
+    accountId =
+      auth.id;
+
+
+    document.getElementById(
+      "email"
+    ).value = mailbox;
+
+
+    /*
+      ブラウザに保存
+    */
+
+    localStorage.setItem(
+      "tempMailAddress",
+      mailbox
+    );
+
+    localStorage.setItem(
+      "tempMailToken",
+      token
+    );
+
+    localStorage.setItem(
+      "tempMailAccountId",
+      accountId
+    );
+
+
+    setStatus(
+      "✅ メアドを作成しました！"
+    );
+
+
+    await refreshInbox();
+
+
+  }catch(error){
+
+    console.error(error);
+
+    setStatus(
+      "❌ 作成エラー: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   保存データ復元
+========================= */
+
+function loadSavedMailbox(){
+
+  const savedAddress =
+    localStorage.getItem(
+      "tempMailAddress"
+    );
+
+  const savedToken =
+    localStorage.getItem(
+      "tempMailToken"
+    );
+
+  const savedAccountId =
+    localStorage.getItem(
+      "tempMailAccountId"
+    );
+
+
+  if(
+    savedAddress &&
+    savedToken &&
+    savedAccountId
+  ){
+
+    mailbox =
+      savedAddress;
+
+    token =
+      savedToken;
+
+    accountId =
+      savedAccountId;
+
+
+    document.getElementById(
+      "email"
+    ).value =
+      mailbox;
+
+
+    setStatus(
+      "保存されていたメアドを復元しました。"
+    );
+
+
+    refreshInbox();
+
+  }
+
+}
+
+
+/* =========================
+   受信箱更新
+========================= */
+
+async function refreshInbox(){
+
+  if(!token){
+
+    setStatus(
+      "先に「新しいメアドを作る」を押してください。"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    setStatus(
+      "📥 受信箱を確認しています..."
+    );
+
+
+    const data =
+      await api(
+        "/messages?page=1",
+        {
+          headers:{
+            "Authorization":
+              "Bearer " + token
+          }
+        }
+      );
+
+
+    const messages =
+      data["hydra:member"] || [];
+
+
+    renderInbox(messages);
+
+
+    setStatus(
+      "📥 " +
+      messages.length +
+      "件のメールがあります。"
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    setStatus(
+      "❌ 受信箱を取得できませんでした: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   受信箱表示
+========================= */
+
+function renderInbox(messages){
+
+  const inbox =
+    document.getElementById(
+      "inbox"
+    );
+
+
+  if(messages.length === 0){
+
+    inbox.innerHTML =
+      '<div class="empty">' +
+      '📭 まだメールはありません' +
+      '</div>';
+
+    return;
+
+  }
+
+
+  inbox.innerHTML = "";
+
+
+  messages.forEach(function(message){
+
+    const item =
+      document.createElement("div");
+
+
+    item.className =
+      "mail " +
+      (
+        message.seen
+          ? ""
+          : "unread"
+      );
+
+
+    const subject =
+      message.subject ||
+      "(件名なし)";
+
+
+    const from =
+      message.from &&
+      message.from.address
+        ? message.from.address
+        : "";
+
+
+    const intro =
+      message.intro ||
+      "";
+
+
+    let date = "";
+
+    if(message.createdAt){
+
+      date =
+        new Date(
+          message.createdAt
+        ).toLocaleString(
+          "ja-JP"
+        );
+
+    }
+
+
+    item.innerHTML =
+
+      '<div class="mail-title">' +
+      escapeHTML(subject) +
+      '</div>' +
+
+      '<div class="mail-from">' +
+      'From: ' +
+      escapeHTML(from) +
+      '</div>' +
+
+      '<div class="mail-intro">' +
+      escapeHTML(intro) +
+      '</div>' +
+
+      '<div class="mail-date">' +
+      escapeHTML(date) +
+      '</div>';
+
+
+    item.addEventListener(
+      "click",
+      function(){
+
+        openMessage(
+          message.id
+        );
+
+      }
+    );
+
+
+    inbox.appendChild(item);
+
+  });
+
+}
+
+
+/* =========================
+   メールを開く
+========================= */
+
+async function openMessage(id){
+
+  try{
+
+    const message =
+      await api(
+        "/messages/" +
+        encodeURIComponent(id),
+        {
+          headers:{
+            "Authorization":
+              "Bearer " + token
+          }
+        }
+      );
+
+
+    document.getElementById(
+      "messageSubject"
+    ).textContent =
+      message.subject ||
+      "(件名なし)";
+
+
+    const from =
+      message.from &&
+      message.from.address
+        ? message.from.address
+        : "";
+
+
+    let date = "";
+
+    if(message.createdAt){
+
+      date =
+        new Date(
+          message.createdAt
+        ).toLocaleString(
+          "ja-JP"
+        );
+
+    }
+
+
+    document.getElementById(
+      "messageInfo"
+    ).textContent =
+      "From: " +
+      from +
+      " / " +
+      date;
+
+
+    let body =
+      message.text ||
+      "";
+
+
+    if(!body && message.html){
+
+      if(
+        Array.isArray(
+          message.html
+        )
+      ){
+
+        body =
+          message.html.join(
+            "\n"
+          );
+
+      }else{
+
+        body =
+          String(
+            message.html
+          );
+
+      }
+
+    }
+
+
+    if(!body){
+
+      body =
+        "(本文がありません)";
+
+    }
+
+
+    document.getElementById(
+      "messageBody"
+    ).textContent =
+      body;
+
+
+    document.getElementById(
+      "messageCard"
+    ).classList.add(
+      "show"
+    );
+
+
+    /*
+      既読にする
+    */
+
+    try{
+
+      await api(
+        "/messages/" +
+        encodeURIComponent(id),
+        {
+          method:"PATCH",
+
+          headers:{
+            "Authorization":
+              "Bearer " + token,
+
+            "Content-Type":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            seen:true
+          })
+        }
+      );
+
+    }catch(error){
+
+      console.log(
+        "既読処理:",
+        error
+      );
+
+    }
+
+
+    await refreshInbox();
+
+
+  }catch(error){
+
+    alert(
+      "メールを開けませんでした。\n\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   メールを閉じる
+========================= */
+
+function closeMessage(){
+
+  document.getElementById(
+    "messageCard"
+  ).classList.remove(
+    "show"
+  );
+
+}
+
+
+/* =========================
+   メアドをコピー
+========================= */
+
+async function copyEmail(){
+
+  const input =
+    document.getElementById(
+      "email"
+    );
+
+
+  if(!input.value){
+
+    alert(
+      "まだメールアドレスがありません。"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    await navigator.clipboard.writeText(
+      input.value
+    );
+
+
+    setStatus(
+      "📋 メールアドレスをコピーしました。"
+    );
+
+
+  }catch(error){
+
+    input.select();
+
+    document.execCommand(
+      "copy"
+    );
+
+
+    setStatus(
+      "📋 メールアドレスをコピーしました。"
+    );
+
+  }
+
+}
+
+
+/* =========================
+   メアド削除
+========================= */
+
+async function deleteMailbox(){
+
+  if(!token || !accountId){
+
+    alert(
+      "削除するメアドがありません。"
+    );
+
+    return;
+
+  }
+
+
+  const ok =
+    confirm(
+      "このメアドを削除しますか？\n\n" +
+      "削除したメアドは復元できません。"
+    );
+
+
+  if(!ok){
+
+    return;
+
+  }
+
+
+  try{
+
+    setStatus(
+      "メアドを削除しています..."
+    );
+
+
+    await api(
+      "/accounts/" +
+      encodeURIComponent(
+        accountId
+      ),
+      {
+        method:"DELETE",
+
+        headers:{
+          "Authorization":
+            "Bearer " + token
+        }
+      }
+    );
+
+
+    mailbox = null;
+    token = null;
+    accountId = null;
+
+
+    localStorage.removeItem(
+      "tempMailAddress"
+    );
+
+    localStorage.removeItem(
+      "tempMailToken"
+    );
+
+    localStorage.removeItem(
+      "tempMailAccountId"
+    );
+
+
+    document.getElementById(
+      "email"
+    ).value = "";
+
+
+    document.getElementById(
+      "inbox"
+    ).innerHTML =
+      '<div class="empty">' +
+      '📭 まだメールはありません' +
+      '</div>';
+
+
+    closeMessage();
+
+
+    setStatus(
+      "🗑️ メアドを削除しました。"
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "メアドを削除できませんでした。\n\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   HTMLエスケープ
+========================= */
+
+function escapeHTML(value){
+
+  return String(value)
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
+
+
+/* =========================
+   初期化
+========================= */
+
+loadSavedMailbox();
+
+
+/* =========================
+   30秒ごとに自動更新
+========================= */
+
+setInterval(
+  function(){
+
+    if(token){
+
+      refreshInbox();
+
+    }
+
+  },
+  30000
+);
+
+</script>
+
+</body>
+</html>
