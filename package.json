@@ -1,0 +1,12 @@
+{
+  "name": "temporary-mail-site",
+  "version": "1.0.0",
+  "description": "Temporary email frontend using Mail.tm API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
